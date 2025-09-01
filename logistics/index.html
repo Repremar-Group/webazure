@@ -481,7 +481,199 @@
       <!--/.row -->
     </div>
     </div>
-    <!-- /.container -->
+    <!-- Estilos del widget -->
+    <style>
+      /* Contenedor del widget */
+      #chat-widget {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999;
+        font-family: Arial, sans-serif;
+      }
+
+      /* Botón flotante de WhatsApp */
+      #chat-toggle {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background-color: #25D366;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        transition: background-color 0.2s;
+      }
+
+      #chat-toggle:hover {
+        background-color: #1ebe57;
+      }
+
+      #chat-toggle img {
+        width: 35px;
+        height: 35px;
+      }
+
+      /* Ventana del chat */
+      #chat-box {
+        display: none;
+        flex-direction: column;
+        width: 300px;
+        height: 400px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        margin-bottom: 10px;
+      }
+
+      /* Header del chat */
+      #chat-header {
+        background-color: #25D366;
+        color: white;
+        padding: 10px;
+        text-align: center;
+        font-weight: bold;
+      }
+
+      /* Área de mensajes */
+      #chat-messages {
+        flex: 1;
+        padding: 10px;
+        overflow-y: auto;
+        font-size: 14px;
+      }
+
+      /* Input y botón enviar */
+      #chat-input-container {
+        display: flex;
+        padding: 10px;
+        border-top: 1px solid #ddd;
+      }
+
+      #chat-input {
+        flex: 1;
+        padding: 8px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        outline: none;
+        font-size: 14px;
+      }
+
+      #chat-send {
+        margin-left: 5px;
+        padding: 8px 12px;
+        background-color: #25D366;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+
+      #chat-send:hover {
+        background-color: #1ebe57;
+      }
+
+      /* Mensajes enviados por el usuario */
+      .user-msg {
+        text-align: right;
+        margin-bottom: 5px;
+      }
+
+      .user-msg span {
+        display: inline-block;
+        background-color: #dcf8c6;
+        padding: 6px 10px;
+        border-radius: 10px;
+      }
+
+      /* Mensajes del sistema / respuesta */
+      .bot-msg {
+        text-align: left;
+        margin-bottom: 5px;
+      }
+
+      .bot-msg span {
+        display: inline-block;
+        background-color: #f1f0f0;
+        padding: 6px 10px;
+        border-radius: 10px;
+      }
+    </style>
+
+    <!-- Widget HTML -->
+    <div id="chat-widget">
+      <div id="chat-box">
+        <div id="chat-header">Asistente Virtual</div>
+        <div id="chat-messages"></div>
+        <div id="chat-input-container">
+          <input type="text" id="chat-input" placeholder="Escribe tu mensaje..." />
+          <button id="chat-send">Enviar</button>
+        </div>
+      </div>
+      <div id="chat-toggle">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
+      </div>
+    </div>
+
+    <!-- Script -->
+    <script>
+      const chatToggle = document.getElementById('chat-toggle');
+      const chatBox = document.getElementById('chat-box');
+      const chatSend = document.getElementById('chat-send');
+      const chatInput = document.getElementById('chat-input');
+      const chatMessages = document.getElementById('chat-messages');
+
+      // Abrir/cerrar chat
+      chatToggle.addEventListener('click', () => {
+        chatBox.style.display = chatBox.style.display === 'flex' ? 'none' : 'flex';
+      });
+
+      // Función para agregar mensaje a la ventana
+      function addMessage(text, sender) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = sender === 'user' ? 'user-msg' : 'bot-msg';
+        const span = document.createElement('span');
+        span.textContent = text;
+        msgDiv.appendChild(span);
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+
+      // Enviar mensaje
+      async function sendMessage() {
+        const mensaje = chatInput.value.trim();
+        if (!mensaje) return;
+
+        addMessage(mensaje, 'user');
+        chatInput.value = '';
+
+        try {
+          const res = await fetch('/api/enviarChatVirtual', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mensaje })
+          });
+          const data = await res.json();
+
+          if (data.success) {
+            addMessage("Mensaje enviado ✅", 'bot');
+          } else {
+            addMessage("Error: " + (data.error || 'Algo salió mal'), 'bot');
+          }
+
+        } catch (error) {
+          addMessage("Error de conexión: " + error.message, 'bot');
+        }
+      }
+
+      chatSend.addEventListener('click', sendMessage);
+      chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+      });
+    </script>
   </footer>
   </div>
   <div class="progress-wrap">
@@ -491,11 +683,7 @@
   </div>
   <script src="./assets/js/plugins.js"></script>
   <script src="./assets/js/theme.js"></script>
-  <a href="https://wa.me/59894298464" target="_blank" class="whatsapp-boton">
-    <span class="icon"></span>
-    <span class="texto">Click aqui para consultar por tu carga</span>
-  </a>
-  
+
 </body>
 
 </html>
